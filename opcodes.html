@@ -1,220 +1,370 @@
-<!DOCTYPE html>
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css" />
+    </head>
 
-<head>
-    <style>
-        text {
-            font-size: 10px;
-            font-family: 'proxima-nova', sans-serif;
-            fill: #333;
-        }
+    <body>
+        <svg preserveAspectRatio="xMidYMid meet"></svg>
+        <script type="module">
+            import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-        text,
-        tspan {
-            text-anchor: middle;
-            alignment-baseline: middle;
-        }
+            // Declare the chart dimensions and margins.
+            const width = 80,
+                height = 60;
 
-        rect {
-            stroke: white;
-            stroke-opacity: 0.5;
-            fill-opacity: 0.5;
-        }
+            const sixteen = [...Array(16).keys()],
+                eight = sixteen.slice(0, 8);
 
-        text.mnemonic {
-            font-size: 14px;
-            fill: #333;
-        }
+            const data = await d3.json("opcodes.json"),
+                table = sixteen.map((d) => data.slice(d * 16, (d + 1) * 16));
 
-        text.op {
-            text-anchor: start;
-            alignment-baseline: before-edge;
-            font-size: 12px;
-        }
-
-        text.flags :not(.affected) {
-            fill-opacity: 0.3;
-        }
-
-        tspan.mode {
-            font-style: italic;
-        }
-
-        .cycles {
-            stroke: #333;
-            stroke-width: 2;
-        }
-
-        .tick1 {
-            stroke-opacity: 0.5;
-        }
-
-        .tick0 {
-            stroke-opacity: 0.1;
-        }
-
-        .ext {
-            stroke: #333;
-        }
-
-        .ext-65C02 {
-            fill: none;
-        }
-
-        .ext-R65C02 {
-            fill-opacity: 0.25;
-        }
-
-        .ext-W65C02 {
-            fill-opacity: 0.5;
-        }
-    </style>
-</head>
-
-<body>
-    <div id="container"></div>
-    <script type="module">
-
-        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-
-        // Declare the chart dimensions and margins.
-        const width = 80, height = 60, border = 30;
-        const colors = d3.schemeSet3;
-        const sixteen = [...Array(16).keys()],
-            eight = sixteen.slice(0, 8);
-
-        const data = await d3.json('opcodes.json'),
-            table = sixteen.map(d => data.slice(d * 16, (d + 1) * 16));
-
-        function fmt_mnemonic(d) {
-            var s = d.mnemonic;
-            if (d.arg) s += ' ' + d.arg;
-            [['a8', 'zp'], ['a16', 'llhh'], ['d8', 'dd'], ['r8', 'rr']].forEach(
-                ([from, to]) => {s = s.replace(from, `/${to}/`);}
-            );
-            return s.split(/\//);
-        }
-
-        function fmt_op(d) {
-            return d.opcode.toUpperCase() + '\u2009\u25A2'.repeat(d.bytes - 1);
-        }
-
-        function fmt_cycles(d) {
-            const
-                slash = d.cycles.includes('/'),
-                n = +d.cycles.split(/\D/).slice(slash ? -1 : 0)[0],
-                branch = slash ? n + 1 : n,
-                page = d.cycles.includes('+') ? branch + 1 : branch;
-
-            return eight.map(i => i < n ? 3 : (i < branch ? 2 : (i < page ? 1 : 0)));
-        }
-
-        function bg_color(d) {
-            if (!d) return 'grey';
-            if (d.mnemonic.match(/^((LD|ST)[^P]|(T[AXYS][AXYS]))/)) {
-                /* load, store, transfer */
-                return colors[0];
-            } else if (d.mnemonic.match(/^(PH|PL)/)) {
-                /* stack */
-                return colors[9];
-            } else if (d.mnemonic.match(/^(DE|IN)/)) {
-                /* inc, dec */
-                return colors[2];
-            } else if (d.mnemonic.match(/^(AD|SB)C/)) {
-                /* arithmetic */
-                return colors[4];
-            } else if (d.mnemonic.match(/^(AND|EOR|ORA)/)) {
-                /* boolean */
-                return colors[5];
-            } else if (d.mnemonic.match(/^(ASL|LSR|RO[RL])/)) {
-                /* bit shift */
-                return colors[11];
-            } else if (d.mnemonic.match(/^(CL|SE)/)) {
-                /* flag ops */
-                return colors[6];
-            } else if (d.mnemonic.match(/^(CMP|CP[XY])/)) {
-                /* comparisons */
-                return colors[10];
-            } else if (d.mnemonic.match(/^B[BCENMPV]|BRA/)) {
-                /* branch */
-                return colors[7];
-            } else if (d.mnemonic.match(/^(JMP|JSR|RTS|RTI|BRK|NOP|WAI|STP)/)) {
-                /* flow control */
-                return colors[3];
-            } else if (d.mnemonic.match(/^(BIT|RMB|SMB|TRB|TSB)/)) {
-                /* bit tests */
-                return colors[1];
-            } else {
-                return 'blue';
+            function fmt_mnemonic(d) {
+                var s = d.mnemonic;
+                if (d.arg) s += " " + d.arg;
+                [
+                    ["a8", "zp"],
+                    ["a16", "llhh"],
+                    ["d8", "dd"],
+                    ["r8", "rr"],
+                ].forEach(([from, to]) => {
+                    s = s.replace(from, `/${to}/`);
+                });
+                return s.replace(/\/,\//, ",").split(/\//);
             }
-        }
 
-        // Create the SVG container.
-        const svg = d3.create("svg")
-            .attr("width", width * 16 + 2 * border)
-            .attr("height", height * 16 + 2 * border);;
+            function fmt_op(d) {
+                return (
+                    d.opcode.toUpperCase() + "\u2009\u25A2".repeat(d.bytes - 1)
+                );
+            }
 
-        const cells = svg.append('g')
-            .selectAll(".row")
-            .data(table)
-            .join("g")
-            .attr('class', 'row')
-            .attr('transform', (_, i) => 'translate(0,' + height * (i + 0.5) + ')')
-            .selectAll(".cell")
-            .data(d => d)
-            .join("g")
-            .attr('class', 'cell')
-            .attr('transform', (_, i) => 'translate(' + width * (i + 0.5) + ',0)')
+            function fmt_cycles(d) {
+                const slash = d.cycles.includes("/"),
+                    n = +d.cycles.split(/\D/).slice(slash ? -1 : 0)[0],
+                    branch = slash ? n + 1 : n,
+                    page = d.cycles.includes("+") ? branch + 1 : branch;
 
-        cells.append('rect')
-            .attr('width', width).attr('height', height)
-            .attr('fill', bg_color)
-            .attr('x', -width / 2).attr('y', -height / 2);
+                return eight.map((i) =>
+                    i < n ? 3 : i < branch ? 2 : i < page ? 1 : 0,
+                );
+            }
 
-        const valid = cells.filter(d => d);
-        valid.append('text')
-            .attr('class', 'op')
-            .attr('x', -width / 2).attr('y', -height / 2)
-            .attr('dx', 5).attr('dy', 5)
-            .text(fmt_op);
+            const variants = {
+                "65C02": {
+                    symbol: "\u25EF", // "\u24B8",
+                    label: "65C02 only",
+                },
+                R65C02: {
+                    symbol: "\u24C7",
+                    label: "Rockwell R65C02 and WD65C02",
+                },
+                W65C02: {
+                    symbol: "\u24CC",
+                    label: "Western Design WC65C02 only",
+                },
+            };
 
-        valid.append('text')
-            .attr('class', 'mnemonic')
-            .attr('dy', 4)
-            .selectAll('tspan')
-            .data(fmt_mnemonic)
-            .join('tspan')
-            .classed('mode', (_, i) => i == 1)
-            .text(d => d);
+            function fmt_variant(d) {
+                return variants[d.variant].symbol;
+            }
 
-        valid.append('text')
-            .attr('class', 'flags')
-            .attr('y', height / 2)
-            .attr('dy', -8)
-            .selectAll('tspan')
-            .data(d => d.flags)
-            .join('tspan')
-            .text((_, i) => 'NZCIDV'[i])
-            .classed('affected', (d, i) => d == 'NZCIDV'[i]);
+            const groups = {
+                transfer: {
+                    color: d3.schemeSet3[0],
+                    label: "load, store, transfer",
+                },
+                stack: {
+                    color: d3.schemeSet3[9],
+                    label: "stack manipulation",
+                },
+                incdec: {
+                    color: d3.schemeSet3[2],
+                    label: "increment, decrement",
+                },
+                arithmetic: {
+                    color: d3.schemeSet3[4],
+                    label: "arithmetic",
+                },
+                boolean: {
+                    color: d3.schemeSet3[5],
+                    label: "boolean logic",
+                },
+                shifts: {
+                    color: d3.schemeSet3[11],
+                    label: "bit shifts",
+                },
+                bits: {
+                    color: d3.schemeSet3[1],
+                    label: "bit set and test",
+                },
+                flags: {
+                    color: d3.schemeSet3[6],
+                    label: "processor flags",
+                },
+                compare: {
+                    color: d3.schemeSet3[10],
+                    label: "comparisons",
+                },
+                branch: {
+                    color: d3.schemeSet3[7],
+                    label: "conditional branches",
+                },
+                flow: {
+                    color: d3.schemeSet3[3],
+                    label: "flow control, specials",
+                },
+            };
 
-        valid.append('g')
-            .attr('transform', `translate(${width / 2 - 12},${-height / 2 + 12})`)
-            .attr('class', 'cycles')
-            .selectAll('line')
-            .data(fmt_cycles)
-            .join("line")
-            .attr("class", d => `tick${d}`)
-            .attr("transform", (_, i) => `rotate(${i * 360 / 8})`)
-            .attr("y1", d => d == 2 ? -5 : -3).attr("y2", -7);
+            function bg_color(d) {
+                if (!d) return "rgba(0,0,0,0.1)";
+                if (d.mnemonic.match(/^((LD|ST)[^P]|(T[AXY][AXY]))/)) {
+                    return groups.transfer.color;
+                } else if (d.mnemonic.match(/^(PH|PL|TSX|TXS)/)) {
+                    return groups.stack.color;
+                } else if (d.mnemonic.match(/^(DE|IN)/)) {
+                    return groups.incdec.color;
+                } else if (d.mnemonic.match(/^(AD|SB)C/)) {
+                    return groups.arithmetic.color;
+                } else if (d.mnemonic.match(/^(AND|EOR|ORA)/)) {
+                    return groups.boolean.color;
+                } else if (d.mnemonic.match(/^(ASL|LSR|RO[RL])/)) {
+                    return groups.shifts.color;
+                } else if (d.mnemonic.match(/^(CL|SE)/)) {
+                    return groups.flags.color;
+                } else if (d.mnemonic.match(/^(CMP|CP[XY])/)) {
+                    return groups.compare.color;
+                } else if (d.mnemonic.match(/^B[BCENMPV]|BRA/)) {
+                    return groups.branch.color;
+                } else if (
+                    d.mnemonic.match(/^(JMP|JSR|RTS|RTI|BRK|NOP|WAI|STP)/)
+                ) {
+                    return groups.flow.color;
+                } else if (d.mnemonic.match(/^(BIT|RMB|SMB|TRB|TSB)/)) {
+                    return groups.bits.color;
+                } else {
+                    return "blue";
+                }
+            }
 
-        valid.filter(d => d.ext)
-            .append("path")
-            .attr("class", d => `ext ext-${d.ext}`)
-            .attr("transform", `translate(${width / 2}, ${height / 2})`)
-            .attr("d", "m -5,-5 l 0,-10 l -10,10 z");
-        // Append the SVG element.
-        container.append(svg.node());
+            // Create the SVG container.
+            const svg = d3
+                .select("svg")
+                .attr(
+                    "viewBox",
+                    `-10 -10 ${width * 21 + 20} ${height * 16 + 20}`,
+                );
 
-    </script>
-</body>
+            const cells = svg
+                .append("g")
+                .selectAll(".row")
+                .data(table)
+                .join("g")
+                .attr("class", "row")
+                .attr(
+                    "transform",
+                    (_, i) => "translate(0," + height * (i + 0.5) + ")",
+                )
+                .selectAll(".cell")
+                .data((d) => d)
+                .join("g")
+                .attr("class", "cell")
+                .attr(
+                    "transform",
+                    (_, i) => "translate(" + width * (i + 0.5) + ",0)",
+                );
 
+            cells
+                .append("rect")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("fill", bg_color)
+                .attr("x", -width / 2)
+                .attr("y", -height / 2);
+
+            const valid = cells.filter((d) => d);
+            valid.attr("id", (d) => `op-${d.opcode}`);
+
+            valid
+                .append("text")
+                .attr("class", "mnemonic")
+                .attr("dy", 4)
+                .selectAll("tspan")
+                .data(fmt_mnemonic)
+                .join("tspan")
+                .classed("mode", (_, i) => i == 1)
+                .text((d) => d);
+
+            valid
+                .append("text")
+                .attr("class", "op")
+                .attr("x", -width / 2)
+                .attr("y", -height / 2)
+                .attr("dx", 5)
+                .attr("dy", 5)
+                .text(fmt_op);
+
+            var g = valid
+                .append("g")
+                .attr("class", "cycles")
+                .attr(
+                    "transform",
+                    `translate(${width / 2 - 12},${-height / 2 + 12})`,
+                );
+
+            g.selectAll(".tick-bg")
+                .data(fmt_cycles)
+                .join("line")
+                .attr("class", (d) => `tick-bg tick${d}`)
+                .attr("transform", (_, i) => `rotate(${(i * 360) / 8})`)
+                .attr("y1", -3)
+                .attr("y2", -7);
+
+            g.selectAll(".tick-fg")
+                .data(fmt_cycles)
+                .join("line")
+                .attr("class", (d) => `tick-fg tick${d}`)
+                .attr("transform", (_, i) => `rotate(${(i * 360) / 8})`)
+                .attr("y1", -3)
+                .attr("y2", -7);
+
+            valid
+                .append("text")
+                .attr("class", "flags")
+                .attr("x", -width / 2)
+                .attr("y", height / 2)
+                .attr("dx", 5)
+                .attr("dy", -8)
+                .selectAll("tspan")
+                .data((d) => d.flags)
+                .join("tspan")
+                .text((_, i) => "NZCIDV"[i])
+                .classed("affected", (d, i) => d == "NZCIDV"[i]);
+
+            valid
+                .filter((d) => d.variant)
+                .append("text")
+                .attr("class", "variant")
+                .attr("x", width / 2)
+                .attr("y", height / 2)
+                .attr("dx", -5)
+                .attr("dy", -8)
+                .text(fmt_variant);
+
+            /* right side info box */
+
+            const info = svg
+                .append("g")
+                .attr("class", "info")
+                .attr("transform", `translate(${width * 16.5}, 0)`);
+
+            info.append("text")
+                .attr("class", "title")
+                .text("65C02 Instruction Set");
+
+            info.append("use")
+                .attr("transform", `translate(0, ${1.5 * height})`)
+                .attr("href", "#op-10");
+
+            info.append("g")
+                .attr("class", "notes")
+                .attr("transform", `translate(${1.25 * width}, ${1 * height})`)
+                .selectAll("text")
+                .data([
+                    "code $10 with \u25A2 one byte argument",
+                    "2 cycles +1 taken? +1  page boundary?",
+                    "no flags modified",
+                    "no variant, standard 6502",
+                ])
+                .join("text")
+                .attr("y", (_, i) => 20 * i)
+                .text((d) => d);
+
+            const key = info
+                .append("g")
+                .attr("class", "key")
+                .attr("transform", `translate(0, ${height * 2.5})`)
+                .selectAll(".color")
+                .data(Object.values(groups))
+                .join("g")
+                .attr("class", "color")
+                .attr("transform", (_, i) => `translate(0, ${i * 30})`);
+
+            key.append("rect")
+                .attr("width", 20)
+                .attr("height", 20)
+                .style("fill", (d) => d.color);
+            key.append("text")
+                .attr("x", 30)
+                .attr("dy", 12)
+                .text((d) => d.label);
+
+            var g = info
+                .append("g")
+                .attr("class", "flags")
+                .attr("transform", `translate(0, ${height * 8.5})`);
+            g.append("text").attr("class", "subtitle").text("Flags");
+            g.selectAll(".line")
+                .data([
+                    "\u24C3egative, \u24CFero, \u24B8arry",
+                    "\u24BEnterrupt, \u24B9ecimal, o\u24CBerflow",
+                ])
+                .join("text")
+                .attr("y", (_, i) => i * 30 + 40)
+                .text((d) => d);
+
+            g = info
+                .append("g")
+                .attr("class", "variants")
+                .attr("transform", `translate(0, ${10.5 * height})`);
+            g.append("text").attr("class", "subtitle").text("Variants");
+            g.selectAll(".variant")
+                .data(Object.values(variants))
+                .join("text")
+                .attr("y", (_, i) => 30 * i + 40)
+                .text((d) => d.symbol + " " + d.label);
+
+            const links = [
+                [
+                    "6502 instruction set",
+                    "https://www.masswerk.at/6502/6502_instruction_set.html",
+                ],
+                [
+                    "65C02 opcodes",
+                    "http://6502.org/tutorials/65c02opcodes.html",
+                ],
+                [
+                    "Periodic table inspiration",
+                    "https://pastraiser.com/cpu/6502/6502_opcodes.html",
+                ],
+                [
+                    "Western Digital WD65C02 datasheet",
+                    "https://www.westerndesigncenter.com/wdc/documentation/w65c02s.pdf",
+                ],
+                [
+                    "Rockwell R65C02 datasheet",
+                    "https://web.archive.org/web/20221112220234if_/http://archive.6502.org/datasheets/rockwell_r65c00_microprocessors.pdf",
+                ],
+            ];
+
+            g = info
+                .append("g")
+                .attr("class", "references")
+                .attr("transform", `translate(0, ${13 * height})`);
+
+            g.append("text").attr("class", "subtitle").text("References");
+
+            g.selectAll(".link")
+                .data(links)
+                .join("a")
+                .attr("class", "link")
+                .attr("href", (d) => d[1])
+                .append("text")
+                .attr("y", (_, i) => i * 30 + 40)
+                .text((d) => d[0]);
+
+            // Append the SVG element.
+            container.append(svg.node());
+        </script>
+    </body>
 </html>

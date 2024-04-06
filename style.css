@@ -1,0 +1,118 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+svg {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+text {
+    font-size: 10px;
+    font-family: "proxima-nova", sans-serif;
+    fill: #333;
+    text-anchor: middle;
+}
+
+.info text {
+    font-size: 20px;
+    text-anchor: start;
+    fill-opacity: 0.7;
+}
+.link text {
+    fill: #00e;
+}
+.notes text {
+    font-size: 15px;
+}
+text.title {
+    alignment-baseline: before-edge;
+    font-size: 30px;
+}
+text.subtitle {
+    font-size: 25px;
+}
+text,
+tspan {
+    alignment-baseline: middle;
+}
+
+rect {
+    stroke: white;
+    stroke-width: 2;
+    stroke-opacity: 0.5;
+    fill-opacity: 0.5;
+}
+
+text.mnemonic {
+    font-size: 14px;
+}
+
+text.op {
+    text-anchor: start;
+    alignment-baseline: before-edge;
+    font-size: 12px;
+    fill: #666;
+}
+
+text.flags {
+    text-anchor: start;
+}
+
+text.flags :not(.affected) {
+    fill-opacity: 0.2;
+}
+
+text.variant {
+    text-anchor: end;
+}
+
+tspan.mode {
+    font-style: italic;
+    fill: #666;
+}
+
+.cycles {
+    stroke: #333;
+    stroke-width: 2;
+}
+
+.tick-bg {
+    stroke-opacity: 0.1;
+}
+
+/* no background behind thin tick, no fg for unused cycles */
+.tick-bg.tick1,
+.tick-fg.tick0 {
+    display: none;
+}
+
+.tick-fg.tick2 {
+    stroke-dasharray: 2 2;
+    stroke-dashoffset: 2;
+}
+
+/* skinny page-boundary cycle */
+.tick-fg.tick1 {
+    stroke-width: 1;
+}
+
+.ext {
+    stroke: #333;
+}
+
+.ext-65C02 {
+    fill: none;
+}
+
+.ext-R65C02 {
+    fill-opacity: 0.25;
+}
+
+.ext-W65C02 {
+    fill-opacity: 0.5;
+}
