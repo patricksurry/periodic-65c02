@@ -334,10 +334,6 @@
                     "http://6502.org/tutorials/65c02opcodes.html",
                 ],
                 [
-                    "Periodic table inspiration",
-                    "https://pastraiser.com/cpu/6502/6502_opcodes.html",
-                ],
-                [
                     "Western Digital WD65C02 datasheet",
                     "https://www.westerndesigncenter.com/wdc/documentation/w65c02s.pdf",
                 ],
@@ -345,11 +341,16 @@
                     "Rockwell R65C02 datasheet",
                     "https://web.archive.org/web/20221112220234if_/http://archive.6502.org/datasheets/rockwell_r65c00_microprocessors.pdf",
                 ],
+                [
+                    "Inspiration",
+                    "https://pastraiser.com/cpu/6502/6502_opcodes.html",
+                ],
+                ["Source", "https://github.com/patricksurry/periodic-65c02"],
             ];
 
             g = info
                 .append("g")
-                .attr("class", "references")
+                .attr("class", "references notes")
                 .attr("transform", `translate(0, ${13 * height})`);
 
             g.append("text").attr("class", "subtitle").text("References");
@@ -360,7 +361,7 @@
                 .attr("class", "link")
                 .attr("href", (d) => d[1])
                 .append("text")
-                .attr("y", (_, i) => i * 30 + 40)
+                .attr("y", (_, i) => i * 25 + 40)
                 .text((d) => d[0]);
 
             // Append the SVG element.
