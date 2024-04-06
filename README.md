@@ -8,7 +8,7 @@ http://6502.org/tutorials/65c02opcodes.html
 
 The current version is served at https://patricksurry.github.io/periodic-65c02/ and should look like this:
 
-[<img src="preview.png">](https://patricksurry.github.io/periodic-65c02/)
+[<img src="preview.jpg">](https://patricksurry.github.io/periodic-65c02/)
 
 To serve locally for development,
 use `python -m http.server` and browse to http://localhost:8000/opcodes.html
