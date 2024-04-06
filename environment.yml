@@ -1,0 +1,7 @@
+name: periodic-table
+dependencies:
+  - pip
+  - python=3
+  - pip:
+      - pandas
+      - lxml
