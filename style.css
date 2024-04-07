@@ -18,6 +18,11 @@ text {
     text-anchor: middle;
 }
 
+.info rect {
+    fill: white;
+    fill-opacity: 0.9;
+}
+
 .info text {
     font-size: 20px;
     text-anchor: start;
@@ -30,15 +35,14 @@ text {
     font-size: 15px;
 }
 text.title {
-    alignment-baseline: before-edge;
+    dominant-baseline: text-before-edge;
     font-size: 30px;
 }
 text.subtitle {
     font-size: 25px;
 }
-text,
-tspan {
-    alignment-baseline: middle;
+text {
+    dominant-baseline: middle;
 }
 
 rect {
@@ -54,7 +58,7 @@ text.mnemonic {
 
 text.op {
     text-anchor: start;
-    alignment-baseline: before-edge;
+    dominant-baseline: text-before-edge;
     font-size: 12px;
     fill: #666;
 }
