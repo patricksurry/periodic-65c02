@@ -55,7 +55,10 @@
             const variants = {
                 "65C02": {
                     symbol: "\u25EF", // "\u24B8",
-                    label: "65C02 only",
+                    label: "65C02 only; \u24CD undocumented",
+                },
+                X: {
+                    symbol: "\u24CD",
                 },
                 R65C02: {
                     symbol: "\u24C7",
@@ -326,7 +329,7 @@
                 .attr("transform", `translate(0, ${10.5 * height})`);
             g.append("text").attr("class", "subtitle").text("Variants");
             g.selectAll(".variant")
-                .data(Object.values(variants))
+                .data(Object.values(variants).filter((d) => d.label))
                 .join("text")
                 .attr("y", (_, i) => 30 * i + 40)
                 .text((d) => d.symbol + " " + d.label);
