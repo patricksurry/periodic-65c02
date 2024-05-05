@@ -281,10 +281,10 @@
                 .attr("transform", `translate(${1.25 * width}, ${1 * height})`)
                 .selectAll("text")
                 .data([
-                    "code $10 with \u25A2 one byte argument",
-                    "2 cycles +1 taken? +1  page boundary?",
-                    "no flags modified",
-                    "no variant, standard 6502",
+                    "opcode $10 + one byte operand \u25A2",
+                    "2 cycles +1 if taken +1 if new page",
+                    "no flags affected",
+                    "no variant (standard 6502)",
                 ])
                 .join("text")
                 .attr("y", (_, i) => 20 * i)
@@ -316,12 +316,13 @@
             g.append("text").attr("class", "subtitle").text("Flags");
             g.selectAll(".line")
                 .data([
-                    "\u24C3egative, \u24CFero, \u24B8arry",
-                    "\u24BEnterrupt, \u24B9ecimal, o\u24CBerflow",
+                    "<tspan>N</tspan>egative, <tspan>Z</tspan>ero, <tspan>C</tspan>arry",
+                    "<tspan>I</tspan>nterrupt, <tspan>D</tspan>ecimal, o<tspan>V</tspan>erflow",
                 ])
                 .join("text")
+                .attr("class", "line flag-key")
                 .attr("y", (_, i) => i * 30 + 40)
-                .text((d) => d);
+                .html((d) => d);
 
             g = info
                 .append("g")

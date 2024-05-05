@@ -41,6 +41,12 @@ text.title {
 text.subtitle {
     font-size: 25px;
 }
+text.flag-key {
+    fill-opacity: 0.5;
+}
+.flag-key tspan {
+    fill-opacity: 0.7;
+}
 text {
     dominant-baseline: middle;
 }
